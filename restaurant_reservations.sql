@@ -2,9 +2,9 @@ create database restaurant_reservations;
 
 create table Customers (
 	customerID int not null unique auto_increment primary key,
-    customerName varchar(45) not null,
-    contactInfo varchar(200),
-    storeEmail varchar(45)
+    customerName varchar(50) not null,
+    contactInfo varchar(150),
+    storeEmail varchar(50)
 );
 
 create table Reservations (
@@ -12,15 +12,15 @@ create table Reservations (
     customerID int not null,
     reservationTime datetime not null,
     numberOfGuests int not null,
-    specialRequests varchar(200),
+    specialRequests varchar(150),
     foreign key(customerID) references Customers(customerID)
 );
 
 create table DiningPreferences (	
 	preferenceID int not null unique auto_increment primary key,
     customerID int not null,
-    favoriteTable varchar(45),
-    dietaryRestrictions varchar(200),
+    favoriteTable varchar(50),
+    dietaryRestrictions varchar(150),
     foreign key(customerID) references Customers(customerID)
 );
 
@@ -32,7 +32,7 @@ END //
 DELIMITER ;
 
 DELIMITER //
-CREATE PROCEDURE addSpecialRequest(IN reservation_ID INT, IN requests_cell VARCHAR(200))
+CREATE PROCEDURE addSpecialRequest(IN reservation_ID INT, IN requests_cell VARCHAR(150))
 BEGIN
     UPDATE Reservations SET specialRequests = requests_cell WHERE reservationID = reservation_ID;
 END //
@@ -40,11 +40,11 @@ DELIMITER ;
 
 DELIMITER //
 CREATE PROCEDURE addReservation(
-    IN customerName_cell VARCHAR(45),
-    IN contactInfo_cell VARCHAR(200),
+    IN customerName_cell VARCHAR(50),
+    IN contactInfo_cell VARCHAR(150),
     IN reservationTime_cell DATETIME,
     IN numberOfGuests_cell INT,
-    IN specialRequests_cell VARCHAR(200)
+    IN specialRequests_cell VARCHAR(150)
 )
 BEGIN
     DECLARE customerID_milt INT;
