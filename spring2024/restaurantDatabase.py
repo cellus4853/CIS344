@@ -4,11 +4,11 @@ from mysql.connector import Error
 
 class RestaurantDatabase():
     def __init__(self,
-                 host="localhost",
+                 host="8000",
                  port="3306",
                  database="restaurant_reservations",
                  user='root',
-                 password='YourPassword'):
+                 password='m6001278#$ER34er'):
 
         self.host = host
         self.port = port
