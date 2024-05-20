@@ -1,34 +1,33 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from os import curdir, sep
 from restaurantDatabase import RestaurantDatabase
 import cgi
 
 class RestaurantPortalHandler(BaseHTTPRequestHandler):
-
+    
     def __init__(self, *args):
         self.database = RestaurantDatabase()
-        super().__init__(*args)
-
+        BaseHTTPRequestHandler.__init__(self, *args)
+    
     def do_POST(self):
         try:
             if self.path == '/addReservation':
                 self.send_response(200)
-                self.send_header('Content-type', 'text/html')
+                self.send_header('Content-type','text/html')
                 self.end_headers()
-                
                 form = cgi.FieldStorage(
                     fp=self.rfile,
                     headers=self.headers,
                     environ={'REQUEST_METHOD': 'POST'}
                 )
 
-                customer_ID = form.getvalue("customer_ID")
-                contact_info = form.getvalue("contact_info")
+                customer_id = int(form.getvalue("customer_id"))
                 reservation_time = form.getvalue("reservation_time")
                 number_of_guests = int(form.getvalue("number_of_guests"))
                 special_requests = form.getvalue("special_requests")
                 
-                self.database.addReservation(customer_name, contact_info, reservation_time, number_of_guests, special_requests)
-                print("Reservation added for customer ID:", customer_ID)
+                self.database.addReservation(customer_id, reservation_time, number_of_guests, special_requests)
+                print("Reservation added for customer ID:", customer_id)
                 
                 self.wfile.write(b"<html><head><title>Restaurant Portal</title></head>")
                 self.wfile.write(b"<body>")
@@ -96,7 +95,7 @@ class RestaurantPortalHandler(BaseHTTPRequestHandler):
 
             if self.path =='/findReservations':
                 return
-        
+            
         except IOError:
             self.send_error(404,'File Not Found: %s' % self.path)
 
@@ -107,4 +106,3 @@ def run(server_class=HTTPServer, handler_class=RestaurantPortalHandler, port=800
     httpd.serve_forever()
 
 run()
-
