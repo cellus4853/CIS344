@@ -1,98 +1,99 @@
 import mysql.connector
+from mysql.connector import Error
 
 class RestaurantDatabase:
-    def __init__(self):
-        self.host = "8000"
-        self.user = "root"
-        self.password = "m6001278#$ER34er"
-        self.database = "restaurant_reservations"
+    def __init__(self,
+                 host="localhost",
+                 port="3306",
+                 database="restaurant_reservations",
+                 user='root',
+                 password='m6001278#$ER34er'):
+        self.host = host
+        self.port = port
+        self.database = database
+        self.user = user
+        self.password = password
+        self.connection = None
+        self.connect()
 
-        self.conn = mysql.connector.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database
-        )
-        self.cursor = self.conn.cursor()
+    def connect(self):
+        try:
+            self.connection = mysql.connector.connect(
+                host=self.host,
+                port=self.port,
+                database=self.database,
+                user=self.user,
+                password=self.password
+            )
+            if self.connection.is_connected():
+                print("Successfully connected to the database")
+        except Error as e:
+            print("Error while connecting to MySQL", e)
 
-create database restaurant_reservations;
+    def close_connection(self):
+        if self.connection.is_connected():
+            self.connection.close()
+            print("MySQL connection is closed")
 
-create table Customers (
-	customerID int not null unique auto_increment primary key,
-    customerName varchar(50) not null,
-    contactInfo varchar(150),
-    storeEmail varchar(50)
-);
+    def addReservation(self, customer_name, contact_info, reservation_time, number_of_guests, special_requests):
+        try:
+            if self.connection.is_connected():
+                cursor = self.connection.cursor()
+                cursor.callproc('addReservation', [customer_name, contact_info, reservation_time, number_of_guests, special_requests])
+                self.connection.commit()
+                print("Reservation added successfully")
+            cursor.close()
+        except Error as e:
+            print("Failed to add reservation", e)
 
-create table Reservations (
-	reservationID int not null unique auto_increment primary key,
-    customerID int not null,
-    reservationTime datetime not null,
-    numberOfGuests int not null,
-    specialRequests varchar(150),
-    foreign key(customerID) references Customers(customerID)
-);
+    def getAllReservations(self):
+        try:
+            if self.connection.is_connected():
+                cursor = self.connection.cursor()
+                query = "SELECT * FROM Reservations"
+                cursor.execute(query)
+                records = cursor.fetchall()
+                cursor.close()
+                return records
+        except Error as e:
+            print("Failed to retrieve reservations", e)
+            return []
 
-create table DiningPreferences (	
-	preferenceID int not null unique auto_increment primary key,
-    customerID int not null,
-    favoriteTable varchar(50),
-    dietaryRestrictions varchar(150),
-    foreign key(customerID) references Customers(customerID)
-);
+    def addCustomer(self, customer_name, contact_info):
+        try:
+            if self.connection.is_connected():
+                cursor = self.connection.cursor()
+                query = "INSERT INTO Customers (customerName, contactInfo) VALUES (%s, %s)"
+                cursor.execute(query, (customer_name, contact_info))
+                self.connection.commit()
+                print("Customer added successfully")
+            cursor.close()
+        except Error as e:
+            print("Failed to add customer", e)
 
-DELIMITER //
-CREATE PROCEDURE findReservations(IN customer_ID INT)
-BEGIN
-    SELECT * FROM Reservations WHERE customerID = customer_ID;
-END //
-DELIMITER ;
+    def getCustomerPreferences(self, customer_id):
+        try:
+            if self.connection.is_connected():
+                cursor = self.connection.cursor()
+                query = "SELECT * FROM DiningPreferences WHERE customerId = %s"
+                cursor.execute(query, (customer_id,))
+                preferences = cursor.fetchall()
+                cursor.close()
+                return preferences
+        except Error as e:
+            print("Failed to retrieve customer preferences", e)
+            return []
 
-DELIMITER //
-CREATE PROCEDURE addSpecialRequest(IN reservation_ID INT, IN requests_cell VARCHAR(150))
-BEGIN
-    UPDATE Reservations SET specialRequests = requests_cell WHERE reservationID = reservation_ID;
-END //
-DELIMITER ;
-
-DELIMITER //
-CREATE PROCEDURE addReservation(
-    IN customerName_cell VARCHAR(50),
-    IN contactInfo_cell VARCHAR(150),
-    IN reservationTime_cell DATETIME,
-    IN numberOfGuests_cell INT,
-    IN specialRequests_cell VARCHAR(150)
-)
-BEGIN
-    DECLARE customerID_milt INT;
-    
-    SELECT customerID INTO customerID_milt FROM Customers WHERE customerName = customerName_cell AND contactInfo = contactInfo_cell;
-    
-    IF customerID_milt IS NULL THEN
-        INSERT INTO Customers (customerName, contactInfo) VALUES (customerName_cell, contactInfo_cell);
-        SET customerID_milt = LAST_INSERT_ID();
-    END IF;
-		INSERT INTO Reservations (customerID, reservationTime, numberOfGuests, specialRequests)
-		VALUES (customerID_milt, reservationTime_cell, numberOfGuests_cell, specialRequests_cell);
-    
-END //
-DELIMITER ;
-
-INSERT INTO Customers (customerName, contactInfo) VALUES
-("Julynn Pelius", "jilton@cmail.com"),
-("John Pelius", "johnboy@cmail.com"),
-("Jessiana Pelius", "Jessie@cmail.com");
-
-INSERT INTO Reservations (customerID, reservationTime, numberOfGuests, specialRequests) VALUES
-(0001, "2024-05-11 14:00:00", 6, "Window seat preferred"),
-(0002, "2024-05-12 15:00:00", 12, NULL),
-(0003, "2024-05-13 16:00:00", 9, "Meat options requested");
-
-INSERT INTO DiningPreferences (customerID, favoriteTable, dietaryRestrictions) VALUES
-(0001, "Table 2", "None"),
-(0002, "Table 1", "Gluten-free"),
-(0003, "Table 3", "Vegan");
-
-def close_connection(self):
-self.cursor.close()
-self.conn.close()
+    def execute_stored_procedure(self, procedure_name, params):
+        try:
+            if self.connection.is_connected():
+                cursor = self.connection.cursor()
+                cursor.callproc(procedure_name, params)
+                results = []
+                for result in cursor.stored_results():
+                    results.append(result.fetchall())
+                cursor.close()
+                return results
+        except Error as e:
+            print(f"Failed to execute stored procedure {procedure_name}", e)
+            return []
