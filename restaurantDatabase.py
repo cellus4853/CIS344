@@ -30,7 +30,7 @@ class RestaurantDatabase():
             if self.connection.is_connected():
                 print("Successfully connected to the database")
                 return
-        except Error as e:
+        except IOError:
             print("Error while connecting to MySQL", e)
 
     def addReservation(self, customer_id, reservation_time, number_of_guests, special_requests):
@@ -41,7 +41,7 @@ class RestaurantDatabase():
                 self.cursor.execute(query, (customer_id, reservation_time, number_of_guests, special_requests))
                 self.connection.commit()
                 print("Reservation added successfully")
-        except Error as e:
+        except IOError:
             print("Failed to add reservation", e)
 
     def getAllReservations(self):
@@ -52,9 +52,9 @@ class RestaurantDatabase():
                 self.cursor.execute(query)
                 records = self.cursor.fetchall()
                 return records
-        except Error as e:
+        except IOError:
             print("Failed to retrieve reservations", e)
-            return []
+            return 
 
     def addCustomer(self, customer_name, contact_info):
         try:
@@ -64,8 +64,9 @@ class RestaurantDatabase():
                 self.cursor.execute(query, (customer_name, contact_info))
                 self.connection.commit()
                 print("Customer added successfully")
-        except Error as e:
+        except IOError:
             print("Failed to add customer", e)
+            return
 
     def getCustomerPreferences(self, customer_id):
         try:
@@ -75,7 +76,7 @@ class RestaurantDatabase():
                 self.cursor.execute(query, (customer_id,))
                 preferences = self.cursor.fetchall()
                 return preferences
-        except Error as e:
+        except IOError:
             print("Failed to retrieve customer preferences", e)
-            return []
+            return 
    
