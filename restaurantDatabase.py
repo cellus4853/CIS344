@@ -77,6 +77,6 @@ class RestaurantDatabase():
                 preferences = self.cursor.fetchall()
                 return preferences
         except IOError:
-            print("Failed to retrieve customer preferences", e)
+            print("Failed to get customer preferences", e)
             return 
    
